@@ -43,7 +43,7 @@ class User(Base):
     email = Column(String(100), unique=True, index=True)
     full_name = Column(String(100), nullable=True)
     hashed_password = Column(String(100))
-    disabled = Column(Boolean, default=False)
+    disabled = Column(Boolean, default=False, nullable=False)
 
 
 # Создание таблиц в базе данных
