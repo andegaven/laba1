@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Выполнила: Остапенко Мария -->
+    <!-- Устанавливает кодировку символов для страницы в UTF-8 -->
+    <meta charset="UTF-8" />
+    <!-- Устанавливает мета-тег viewport для управления макетом страницы на мобильных устройствах -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Название страницы -->
+    <title>User Management System</title>
+    <!-- Таблица стилей -->
+    <style>
+        /* Основные стили */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* Контейнер для централизации контента */
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* Заголовки */
+        h1, h2 {
+            color: #444;
+            text-align: center;
+        }
+
+        /* Поля ввода */
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+
+        /* Кнопки */
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Список пользователей */
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 3px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        /* Специальные классы для определенных блоков */
+        .profile-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .result-container {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Главный контейнер -->
+    <div class="container">
+        <!-- Основной заголовок страницы -->
+        <h1>Система управления пользователями</h1>
+
+        <!-- Раздел авторизации -->
+        <section class="login-section">
+            <h2>Авторизация</h2>
+            <form id="login-form">
+                <label for="login-username">Логин:</label>
+                <input type="text" id="login-username" placeholder="Логин" required>
+                <label for="login-password">Пароль:</label>
+                <input type="password" id="login-password" placeholder="Пароль" required>
+                <button type="submit">Войти</button>
+            </form>
+        </section>
+
+        <!-- Раздел получения моего профиля -->
+        <section class="profile-section">
+            <h2>Просмотреть мой профиль</h2>
+            <button id="fetch-profile">Получить мои данные</button>
+            <div id="profile-output" class="result-container"></div>
+        </section>
+
+        <!-- Раздел списка пользователей -->
+        <section class="users-section">
+            <h2>Список пользователей</h2>
+            <ul id="user-list"></ul>
+        </section>
+
+        <!-- Раздел создания пользователя -->
+        <section class="create-user-section">
+            <h2>Создание пользователя</h2>
+            <form id="create-user-form">
+                <label for="create-username">Логин:</label>
+                <input type="text" id="create-username" placeholder="Логин" required>
+                <label for="create-email">Электронная почта:</label>
+                <input type="email" id="create-email" placeholder="Эл.почта" required>
+                <label for="create-full-name">Ф.И.О.:</label>
+                <input type="text" id="create-full-name" placeholder="Ф.И.О.">
+                <label for="create-password">Пароль:</label>
+                <input type="password" id="create-password" placeholder="Пароль" required>
+                <button type="submit">Создать пользователя</button>
+            </form>
+        </section>
+
+        <!-- Раздел редактирования пользователя -->
+        <section class="update-user-section">
+            <h2>Редактирование пользователя</h2>
+            <form id="update-user-form">
+                <label for="update-user-id">ID пользователя:</label>
+                <input type="number" id="update-user-id" placeholder="ID пользователя" required>
+                <label for="update-username">Логин:</label>
+                <input type="text" id="update-username" placeholder="Логин">
+                <label for="update-email">Электронная почта:</label>
+                <input type="email" id="update-email" placeholder="Эл.почта">
+                <label for="update-full-name">Ф.И.О.:</label>
+                <input type="text" id="update-full-name" placeholder="Ф.И.О.">
+                <label for="update-password">Пароль:</label>
+                <input type="password" id="update-password" placeholder="Пароль">
+                <button type="submit">Обновить пользователя</button>
+            </form>
+        </section>
+
+        <!-- Раздел удаления пользователя -->
+        <section class="delete-user-section">
+            <h2>Удаление пользователя</h2>
+            <form id="delete-user-form">
+                <label for="delete-user-id">ID пользователя:</label>
+                <input type="number" id="delete-user-id" placeholder="ID пользователя" required>
+                <button type="submit">Удалить пользователя</button>
+            </form>
+        </section>
+    </div>
+
+    <!-- Скрипт для взаимодействия с сервером -->
+    <script>
+        let accessToken = ''; // Переменная для хранения токена
+
+        // Обработка формы входа
+        document.getElementById("login-form").addEventListener("submit", async function(event) {
+            event.preventDefault(); // Остановка стандартного поведения формы
+
+            const username = document.getElementById("login-username").value;
+            const password = document.getElementById("login-password").value;
+
+            const headers = {
+                "Content-Type": "application/x-www-form-urlencoded",
+            };
+
+            const body = new URLSearchParams({
+                grant_type: "password",
+                username: username,
+                password: password,
+            });
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/token`, {
+                    method: "POST",
+                    headers: headers,
+                    body: body,
+                });
+
+                const data = await response.json();
+                console.log(data);
+
+                if (data.access_token) {
+                    accessToken = data.access_token; // Сохраняем токен
+                    alert("Успешный вход! Токен: " + data.access_token);
+                } else {
+                    alert("Ошибка входа!");
+                }
+            } catch (error) {
+                console.error("Ошибка запроса:", error);
+                alert("Ошибка запроса!");
+            }
+        });
+
+        // Получение профиля пользователя
+        document.getElementById('fetch-profile').addEventListener('click', async () => {
+            if (!accessToken) {
+                alert('Сначала войдите в систему!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBaseUrl}/users/me`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Ошибка при запросе: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const outputDiv = document.getElementById('profile-output');
+                outputDiv.innerHTML = `
+                    <strong>Профиль пользователя:</strong><br>
+                    Имя пользователя: ${data.username}<br>
+                    Электронная почта: ${data.email}<br>
+                    Полное имя: ${data.full_name ? data.full_name : 'не указано'}
+                `;
+            } catch (err) {
+                console.error(err);
+                alert('Ошибка при получении данных профиля.');
+            }
+        });
+
+        // Базовый URL для API, к которому будут отправляться запросы
+        const apiBaseUrl = "http://localhost:8000";
+
+        // Функция для получения списка пользователей
+        async function fetchUsers() {
+            const response = await fetch(`${apiBaseUrl}/users/`);
+            const users = await response.json();
+            const userList = document.getElementById("user-list");
+            userList.innerHTML = "";
+            users.forEach((user) => {
+                const li = document.createElement("li");
+                li.textContent = `${user.id}: ${user.username} (${user.email})`;
+                userList.appendChild(li);
+            });
+        }
+
+        // Обработчик создания пользователя
+        document.getElementById("create-user-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const username = document.getElementById("create-username").value;
+            const email = document.getElementById("create-email").value;
+            const full_name = document.getElementById("create-full-name").value;
+            const password = document.getElementById("create-password").value;
+
+            const response = await fetch(`${apiBaseUrl}/register/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, email, full_name, password }),
+            });
+
+            if (response.ok) {
+                alert("User created successfully");
+                fetchUsers();
+            } else {
+                alert("Error creating user");
+            }
+        });
+
+        // Обработчик обновления пользователя
+        document.getElementById("update-user-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById("update-user-id").value;
+            const username = document.getElementById("update-username").value;
+            const email = document.getElementById("update-email").value;
+            const full_name = document.getElementById("update-full-name").value;
+            const password = document.getElementById("update-password").value;
+
+            const response = await fetch(`${apiBaseUrl}/users/${userId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, email, full_name, password }),
+            });
+
+            if (response.ok) {
+                alert("User updated successfully");
+                fetchUsers();
+            } else {
+                alert("Error updating user");
+            }
+        });
+
+        // Обработчик удаления пользователя
+        document.getElementById("delete-user-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById("delete-user-id").value;
+
+            const response = await fetch(`${apiBaseUrl}/users/${userId}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                alert("User deleted successfully");
+                fetchUsers();
+            } else {
+                alert("Error deleting user");
+            }
+        });
+
+        // Изначально получаем список пользователей
+        fetchUsers();
+    </script>
+</body>
+</html>

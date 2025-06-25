@@ -12,6 +12,9 @@ from passlib.context import CryptContext
 import jwt
 from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timedelta, timezone
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 
 # блок переменных
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -19,6 +22,29 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # блок создания объектов
 # Создание объекта FastAPI
 app = FastAPI()
+
+origins = [
+    'http://localhost.tiangolo.com',
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:8080",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    # allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/", response_class=HTMLResponse)
+async def get_client():
+    with open("static/index.html", "r", encoding="utf-8") as file:
+        return file.read()
+
 
 # Настройка базы данных MySQL
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://isp_p_Ostapenko:12345@77.91.86.135/isp_p_Ostapenko"
@@ -39,11 +65,11 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(50), unique=True, index=True)
+    username = Column(String(50), index=True)
     email = Column(String(100), unique=True, index=True)
     full_name = Column(String(100), nullable=True)
     hashed_password = Column(String(100))
-    disabled = Column(Boolean, default=False)
+    disabled = Column(Boolean, default=False, nullable=False)
 
 
 # Создание таблиц в базе данных
@@ -114,7 +140,9 @@ def get_users(db: Session = Depends(get_db)):
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
+    return hashed_password.decode('utf-8')
 
 
 def verify_password(plain_password, hashed_password):
@@ -232,21 +260,26 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 
 # Маршрут для обновления данных пользователя.
-@app.put("/users/{user_id}", response_model=UserResponse)
+@app.put("/users/{user_id}")
 def update_user(user_id: int, user_update: UserUpdate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Хэшируем пароль перед сохранением
+    if user_update.password:
+        user.hashed_password = hash_password(user_update.password)
+
+    # Обновляем остальные поля, если переданы новые значения
     if user_update.username:
         user.username = user_update.username
     if user_update.email:
         user.email = user_update.email
     if user_update.full_name:
         user.full_name = user_update.full_name
-    if user_update.password:
-        user.hashed_password = hash_password(user_update.password)
     if user_update.disabled is not None:
         user.disabled = user_update.disabled
+
     try:
         db.commit()
         db.refresh(user)
